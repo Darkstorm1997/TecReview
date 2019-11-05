@@ -1,0 +1,134 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using TecReview.Models
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+
+@model TecReview.Models.Item
+
+@{
+    ViewData["Title"] = Model.Header;
+}
+
+<!-------------------------------HEADER--------------------------------->
+<br />
+<div>
+    <partial name="_CategoryBadge" model="@Model.Category" />
+    <header>
+        <h2 class="entry-title">@Model.Header</h2>
+
+        <p>@Model.Summary</p>
+
+        <small><b>Article Date: </b>@Html.DisplayFor(model => model.DateCreated)</small>
+        <small><b>Store Location: </b>@Html.DisplayFor(model => model.Location)</small>
+
+        <p>
+            <a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button btn btn-sm" data-size="large" data-show-screen-name="false" data-show-count="false">Tweet</a>
+            <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+        </p>
+    </header>
+
+    <div class="row">
+        <div class="col">
+            <a asp-controller="Items" asp-action="Details" asp-route-id="@Model.ItemId" style="background-color:black">
+                <img class="card-img-right flex-auto d-none d-md-block" style="width: 400px; height:auto" src="@Model.HomeImageUrl" data-holder-rendered="true" />
+            </a>
+        </div>
+
+        <div class="col">
+            @if (Model.IsShowMap)
+            {
+                <div class="pb-3 border-bottom">
+                    <small><b>Store Location: </b><span class="badge badge-secondary">@Model.Location</span></small>
+                    <div id="itemMap" class="img-thumbnail" style="width: 250px; height: 200px;"></div>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+<hr />
+
+<div>
+    <!-------------------------------CONTENT--------------------------------->
+    <section>
+        <div id="ItemContent" class="border-bottom"></div>
+    </section>
+
+    <section>
+        <h3>Related...</h3>
+        <div class="related-items-list row" id="relatedItemsList">
+        </div>
+    </section>
+
+    <!-------------------------------COMMENTS--------------------------------->
+    <section>
+        <partial name="_Comments" model="@Model" />
+    </section>
+</div>
+
+<!-------------------------------ADVERTISEMENTS--------------------------------->
+<div id="footerAdvWrapper" style="width:100%; position: fixed; bottom: 0; text-align: center;">
+    <script src="~/js/ads.js" type="text/javascript"></script>
+    <script type="text/javascript" src="//cdn.bannersnack.com/iframe/embed.js"></script>
+</div>
+
+
+
+@section Scripts
+    {
+    <!-------------------------------TEMPLATES--------------------------------->
+
+    <script id="relatedItemTemplate" type="text/x-jQuery-tmpl">
+        <div class="card text-light bg-dark col-md-3">
+            <a asp-controller="Items" asp-action="Details" asp-route-id="@Model.ItemId">
+                <img class="card-img-top"
+                     style="height: 130px; width: 100%; display: block;"
+                     src="${homeImageUrl}"
+                     data-holder-rendered="true">
+            </a>
+            <div class="card-body">
+                <h5 class="card-title">${name}</h5>
+                <a class="btn btn-sm btn-secondary" asp-controller="Items" asp-action="MoveRelated"
+                   href="/Items/MoveRelated/?prevId=@Model.ItemId&newId=${itemId}">Read more...</a>
+            </div>
+        </div>
+    </script>
+
+    <!-------------------------------SCRIPTS--------------------------------->
+    <script async type="text/javascript">
+        $(document).ready(function () {
+            $("#ItemContent").html(markdown_to_html("@Model.Content"));
+            load_markdown_tweeter()
+
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip();
+            });
+
+            update_related_items()
+            update_comments(@Model.ItemId)
+        })
+
+        var update_related_items = function () {
+            var url = "/Items/GetRelatedItems/" + @Model.ItemId;
+            $.getJSON(url, function (relatedItems) {
+                relatedItems.forEach(relatedItem => {
+                    $("#relatedItemTemplate").tmpl(relatedItem).appendTo("#relatedItemsList");
+                })
+            })
+        }
+
+    </script>
+
+    @if (Model.IsShowMap)
+    {
+        <script src="~/js/map.js" type="text/javascript"></script>
+
+        <script type="text/javascript">
+            DetailsLoadMap = function () { LoadMap('#itemMap', '@Model.Location') }
+        </script>
+        <script type="text/javascript" src="https://www.bing.com/api/maps/mapcontrol?callback=DetailsLoadMap" async defer></script>
+    }
+}

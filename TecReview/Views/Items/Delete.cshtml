@@ -1,0 +1,19 @@
+﻿@model TecReview.Models.Item
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<br />
+<h3>Delete Item</h3>
+<br />
+
+<div class="alert-danger">
+    <h3>Are you sure you want to delete this "@Model.Header" Item?</h3>
+    <strong>If you choose to delete, you cannot restore that category</strong>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="ItemId" />
+        <input type="submit" value="Delete" class="btn btn-danger" />
+    </form>
+</div>
